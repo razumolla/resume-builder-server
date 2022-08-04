@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.cdirk.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.n68kq.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -21,7 +21,17 @@ async function run() {
         console.log("Database Connected");
         const serviceCollection = client.db("resume_builder").collection("services");
 
-        
+        // CV DATABASE
+        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
+        //get CV photo
+        app.get('/cvPhoto', async (req, res) => {
+            const query = {};
+            const cursor = cvPhotoCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
     }
     finally {
 
