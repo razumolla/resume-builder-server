@@ -20,8 +20,9 @@ async function run() {
         await client.connect();
         console.log("Database Connected");
         const serviceCollection = client.db("resume_builder").collection("services");
+        const resumeCollection = client.db("resume_builder").collection("resume");
 
-        
+
     }
     finally {
 
@@ -38,3 +39,4 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Resume-Builder app listening on port ${port}`)
 })
+
