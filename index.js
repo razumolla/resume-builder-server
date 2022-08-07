@@ -21,6 +21,18 @@ async function run() {
         console.log("Database Connected 2");
         const serviceCollection = client.db("resume_builder").collection("services");
 
+
+        // CV DATABASE
+        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
+        //get CV photo
+        app.get('/cvPhoto', async (req, res) => {
+            const query = {};
+            const cursor = cvPhotoCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
     }
     finally {
 
