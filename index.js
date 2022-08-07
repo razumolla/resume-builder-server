@@ -22,9 +22,12 @@ async function run() {
         await client.connect();
         console.log("Database Connected");
         const serviceCollection = client.db("resume_builder").collection("services");
+        //Cover Letter Database Start
         const coverLetterCollection = client.db("resume_builder").collection("coverLetter");
-        
-     
+         //Cover Letter Database End
+
+
+     //Cover Letter  Part Start
         app.post('/aboutForm', async(req, res) =>{
             const NewAboutForm = req.body;
             const result = await coverLetterCollection.insertOne(NewAboutForm);
@@ -39,7 +42,20 @@ async function run() {
             const service=await cursur.toArray();
             res.send(service);
         })
-        
+         //Cover Letter Part End
+
+        // CV DATABASE
+        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
+        //get CV photo
+        app.get('/cvPhoto', async (req, res) => {
+            const query = {};
+            const cursor = cvPhotoCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
+
     }
     finally {
 
