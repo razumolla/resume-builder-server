@@ -27,20 +27,14 @@ async function run() {
         //post data
         app.post('/resume', async (req, res) => {
             const newResume = req.body;
-            console.log('Added new user:', newResume);
+            // console.log('Added new user:', newResume);
             const result = await resumeCollection.insertOne(newResume);
             res.send(result);
-            res.send({ result: 'success ' });
+            console.log(result);
+            // res.send({ result: 'success ' });
         });
 
 
-        app.post('/user', async (req, res) => {
-            const newUser = req.body;
-            console.log('Adding User:', newUser);
-            const result = await resumeCollection.insertOne(newUser);
-            res.send(result);
-            // res.send({ result: 'success ' });
-        })
     }
     finally {
 
