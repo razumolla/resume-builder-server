@@ -47,11 +47,18 @@ async function run() {
 
         // CV DATABASE
         const cvPhotoCollection = client.db("cv_template").collection("cv_images");
-        //get CV photo
+        const cvInfoCollection = client.db("cv_template").collection("cvInfo");
+        //GET CV photo
         app.get('/cvPhoto', async (req, res) => {
             const query = {};
             const cursor = cvPhotoCollection.find(query);
             const result = await cursor.toArray();
+            res.send(result);
+        })
+        //POST data from cv 
+        app.post('/cvInfo', async (req, res) => {
+            const info = req.body;
+            const result = await cvInfoCollection.insertOne(info);
             res.send(result);
         })
 
