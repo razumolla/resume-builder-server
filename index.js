@@ -3,7 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
-const {MongoClient, ServerApiVersion, ObjectId} = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000
 
@@ -24,11 +24,11 @@ async function run() {
         const serviceCollection = client.db("resume_builder").collection("services");
         //Cover Letter Database Start
         const coverLetterCollection = client.db("resume_builder").collection("coverLetter");
-         //Cover Letter Database End
+        //Cover Letter Database End
 
 
-     //Cover Letter  Part Start
-        app.post('/aboutForm', async(req, res) =>{
+        //Cover Letter  Part Start
+        app.post('/aboutForm', async (req, res) => {
             const NewAboutForm = req.body;
             const result = await coverLetterCollection.insertOne(NewAboutForm);
             // console.log(result);
@@ -36,13 +36,13 @@ async function run() {
 
         })
 
-        app.get('/aboutForm', async(req, res)=>{
+        app.get('/aboutForm', async (req, res) => {
             const query = {};
-            const cursur=coverLetterCollection.find(query);
-            const service=await cursur.toArray();
+            const cursur = coverLetterCollection.find(query);
+            const service = await cursur.toArray();
             res.send(service);
         })
-         //Cover Letter Part End
+        //Cover Letter Part End
 
 
         // CV DATABASE
