@@ -50,6 +50,7 @@ async function run() {
         const inspiringBlogCollection = client.db("carrier_blogs").collection("inspiringBlog");
         //Cover Letter Database Start
         const coverLetterCollection = client.db("resume_builder").collection("coverLetter");
+        const clPhotoCollection = client.db("resume_builder").collection("coverLetterTemplate");
         //Cover Letter Database End
 
         // user collection for jwt
@@ -84,11 +85,13 @@ async function run() {
 
         })
 
-        app.get('/aboutForm', async (req, res) => {
+        app.get('/coverLetterPhoto', async (req, res) => {
             const query = {};
-            const cursur = coverLetterCollection.find(query);
-            const service = await cursur.toArray();
-            res.send(service);
+            const cursor = clPhotoCollection.find(query);
+            console.log(cursor);
+            const result = await cursor.toArray();
+            res.send(result);
+            console.log(result)
         })
         //Cover Letter Part End
 
