@@ -53,12 +53,15 @@ async function run() {
         const clPhotoCollection = client.db("resume_builder").collection("coverLetterTemplate");
         //Cover Letter Database End
 
+         // all users &
         // user collection for jwt
         const userCollection = client.db("resume_builder").collection("users");
 
         // user review 
         const reviewCollection = client.db("userReview").collection("review");
 
+       
+        
 
 
         // user information and jwt
@@ -77,6 +80,38 @@ async function run() {
             
 
         })
+
+
+app.get("/user", async (req, res) => {
+    const users = await userCollection.find().toArray();
+    res.send(users);
+  });
+
+  app.get("/admin/:email", async (req, res) => {
+    const email = req.params.email;
+    const user = await userCollection.findOne({ email: email });
+    const isAdmin = user.role === "admin";
+    res.send({ admin: isAdmin });
+  });
+
+  app.put("/user/admin/:email", async (req, res) => {
+    const email = req.params.email;
+    const filter = await userCollection.findOne({ email: email });
+    console.log(filter);
+    const updateDoc = {
+      $set: { role: "admin" },
+    };
+    const result = await userCollection.updateOne(filter, updateDoc);
+    res.send(result);
+  });
+
+ // Delete
+ app.delete("/user/:id", async (req, res) => {
+    const id = req.params.id;
+    const query ={_id:ObjectId(id)};
+    const result = await userCollection.deleteOne(query);
+    res.send(result);
+  });
 
 
         //Cover Letter  Part Start
@@ -182,7 +217,27 @@ async function run() {
         })
 
 
-// reviews show
+        // review get 
+
+        app.get("/reviews", async (req, res) => {
+            const email = req.query.email;
+      
+            const query = { email: email };
+            const cursor = reviewCollection.find(query);
+            const reviews= await cursor.toArray();
+            res.send(reviews);
+          });
+
+// reviews add {post}
+
+app.post("/reviews", async (req, res) => {
+    const newUser = req.body;
+    console.log("new user", newUser);
+    const result = await reviewCollection.insertOne(newUser);
+    res.send(result);
+})
+
+
 
 
     }
