@@ -56,6 +56,9 @@ async function run() {
         // user collection for jwt
         const userCollection = client.db("resume_builder").collection("users");
 
+        // user review 
+        const reviewCollection = client.db("userReview").collection("review");
+
 
 
         // user information and jwt
@@ -179,7 +182,7 @@ async function run() {
         })
 
 
-
+// reviews show
 
 
     }
