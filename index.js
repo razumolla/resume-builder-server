@@ -44,11 +44,16 @@ async function run() {
 
         app.get('/coverLetterPhoto', async (req, res) => {
             const query = {};
-            const cursor = clPhotoCollection.find(query);
-            console.log(cursor);
+            const cursor = clPhotoCollection.find(query);        
             const result = await cursor.toArray();
             res.send(result);
-            console.log(result)
+        })
+
+        app.get('/allCLPhoto', async(req, res) =>{
+            const query = {}
+            const cursor = coverLetterCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
         })
         //Cover Letter Part End
 
