@@ -86,38 +86,56 @@ async function run() {
 
         })
 
-
-        app.get("/user", async (req, res) => {
-            const users = await userCollection.find().toArray();
-            res.send(users);
-        });
-
-        app.get("/admin/:email", async (req, res) => {
-            const email = req.params.email;
-            const user = await userCollection.findOne({ email: email });
-            const isAdmin = user.role === "admin";
-            res.send({ admin: isAdmin });
-        });
-
-        app.put("/user/admin/:email", async (req, res) => {
-            const email = req.params.email;
-            const filter = await userCollection.findOne({ email: email });
-            console.log(filter);
-            const updateDoc = {
-                $set: { role: "admin" },
-            };
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        });
-
-        // Delete
-        app.delete("/user/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const result = await userCollection.deleteOne(query);
-            res.send(result);
-        });
-
+/*  user and admin code  */
+    
+    //  user see
+    app.get("/user", async (req, res) => {
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    });
+ 
+ 
+   // user
+   app.put("/user/:email", async (req, res) => {
+      const user = req.body;
+      const email = req.params.email;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const output = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(output);
+    });
+ 
+   //   see admin
+   app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+ 
+  // make admin
+  app.put("/user/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = await userCollection.findOne({ email: email });
+      console.log(filter);
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+ 
+     // Delete admin
+     app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+        
 
         //Cover Letter  Part Start
         app.post('/aboutForm', async (req, res) => {
@@ -310,13 +328,10 @@ async function run() {
 
         app.post("/reviews", async (req, res) => {
             const newUser = req.body;
-            console.log("new user", newUser);
+            console.log("new review", newUser);
             const result = await reviewCollection.insertOne(newUser);
             res.send(result);
         })
-
-
-
 
     }
     finally {
