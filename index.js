@@ -22,7 +22,6 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
-
 // jwt middleware
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -145,7 +144,13 @@ async function run() {
         app.get('/coverLetterPhoto', async (req, res) => {
             const query = {};
             const cursor = clPhotoCollection.find(query);
-            console.log(cursor);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get('/allCLPhoto', async (req, res) => {
+            const query = {}
+            const cursor = coverLetterCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
 
@@ -157,7 +162,9 @@ async function run() {
         const cvPhotoCollection = client.db("cv_template").collection("cv_images");
         const cvInfoCollection = client.db("cv_template").collection("cvInfo");
         //GET CV photo
+
         app.get('/cvPhoto', async (req, res) => {
+
             const query = {};
             const cursor = cvPhotoCollection.find(query);
             const result = await cursor.toArray();
@@ -170,6 +177,7 @@ async function run() {
             const result = await cvInfoCollection.insertOne(info);
             res.send(result);
         })
+
 
         // blog add section start
         app.post('/cvResumeBlog', async (req, res) => {
@@ -184,6 +192,7 @@ async function run() {
             res.send(resumes);
         })
 
+
         app.post('/coverLetterBlog', async (req, res) => {
             const coverLetter = req.body;
             const result = await coverLetterBlogCollection.insertOne(coverLetter);
@@ -195,6 +204,14 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         })
+        // get one data for details page
+        app.get('/coverLetterBlog/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await coverLetterBlogCollection.findOne(query);
+            res.send(result)
+        })
+
 
         app.post('/personalDevBlog', async (req, res) => {
             const personalDevBlog = req.body;
@@ -227,7 +244,6 @@ async function run() {
         // stripe
 
         app.post('/create-payment-intent', async (req, res) => {
-
             const price = req.body;
 
             const amount = parseInt((price.price)) * 100;
@@ -250,6 +266,17 @@ async function run() {
             const reviews = await cursor.toArray();
             res.send(reviews);
         });
+
+
+        // reviews add {post}
+
+        app.post("/reviews", async (req, res) => {
+            const newUser = req.body;
+            console.log("new user", newUser);
+            const result = await reviewCollection.insertOne(newUser);
+            res.send(result);
+        })
+
 
         // reviews add {post}
 
