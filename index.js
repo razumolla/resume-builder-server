@@ -5,11 +5,14 @@ require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000
 
 // Middleware on
+
 app.use(cors());
 app.use(express.json());
 
@@ -44,10 +47,26 @@ async function run() {
         await client.connect();
         console.log("Database Connected 2");
         const serviceCollection = client.db("resume_builder").collection("services");
+
+
+        const resumeCollection = client.db("resume_builder").collection("resume");
+
+        //post data
+        app.post('/resume', async (req, res) => {
+            const newResume = req.body;
+            // console.log('Added new user:', newResume);
+            const result = await resumeCollection.insertOne(newResume);
+            res.send(result);
+            console.log(result);
+            // res.send({ result: 'success ' });
+        });
+
+
         const cvResumeBlogCollection = client.db("carrier_blogs").collection("cvResumeBlog");
         const coverLetterBlogCollection = client.db("carrier_blogs").collection("coverLetterBlog");
         const personalDevBlogCollection = client.db("carrier_blogs").collection("personalDevBlog");
         const inspiringBlogCollection = client.db("carrier_blogs").collection("inspiringBlog");
+
         //Cover Letter Database Start
         const coverLetterCollection = client.db("resume_builder").collection("coverLetter");
         const clPhotoCollection = client.db("resume_builder").collection("coverLetterTemplate");
@@ -86,62 +105,62 @@ async function run() {
 
         })
 
-/*  user and admin code  */
-    
-    //  user see
-    app.get("/user", async (req, res) => {
-      const users = await userCollection.find().toArray();
-      res.send(users);
-    });
- 
- 
-   // user
-   app.put("/user/:email", async (req, res) => {
-      const user = req.body;
-      const email = req.params.email;
-      const filter = { email: email };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: user,
-      };
-      const output = await userCollection.updateOne(filter, updateDoc, options);
-      res.send(output);
-    });
- 
-   //   see admin
-   app.get("/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const user = await userCollection.findOne({ email: email });
-      const isAdmin = user.role === "admin";
-      res.send({ admin: isAdmin });
-    });
- 
-  // make admin
-  app.put("/user/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const filter = await userCollection.findOne({ email: email });
-      console.log(filter);
-      const updateDoc = {
-        $set: { role: "admin" },
-      };
-      const result = await userCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
- 
-     // Delete admin
-     app.delete("/user/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const result = await userCollection.deleteOne(query);
-      res.send(result);
-    });
-        
+        /*  user and admin code  */
+
+        //  user see
+        app.get("/user", async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        });
+
+
+        // user
+        app.put("/user/:email", async (req, res) => {
+            const user = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const output = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(output);
+        });
+
+        //   see admin
+        app.get("/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === "admin";
+            res.send({ admin: isAdmin });
+        });
+
+        // make admin
+        app.put("/user/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const filter = await userCollection.findOne({ email: email });
+            console.log(filter);
+            const updateDoc = {
+                $set: { role: "admin" },
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        // Delete admin
+        app.delete("/user/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        });
+
 
         //Cover Letter  Part Start
         app.post('/aboutForm', async (req, res) => {
             const NewAboutForm = req.body;
             const result = await coverLetterCollection.insertOne(NewAboutForm);
-            // console.log(result);
+
             res.send(result);
 
         })
@@ -158,6 +177,7 @@ async function run() {
             const cursor = coverLetterCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
+
         })
         //Cover Letter Part End
 
@@ -165,12 +185,14 @@ async function run() {
         //GET CV photo
 
         app.get('/cvPhoto', async (req, res) => {
+
             const query = {};
             const cursor = cvPhotoCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
-        //POST data from cv 
+
+        //POST data from cv
         app.post('/cvInfo', async (req, res) => {
             const info = req.body;
             const result = await cvInfoCollection.insertOne(info);
@@ -300,9 +322,12 @@ async function run() {
 
 
 
+
         // stripe
+
         app.post('/create-payment-intent', async (req, res) => {
             const price = req.body;
+
             const amount = parseInt((price.price)) * 100;
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
@@ -324,6 +349,7 @@ async function run() {
             res.send(reviews);
         });
 
+
         // reviews add {post}
 
         app.post("/reviews", async (req, res) => {
@@ -333,14 +359,26 @@ async function run() {
             res.send(result);
         })
 
+        // <<<<<<< HEAD
+
+        //         // reviews add {post}
+
+        //         app.post("/reviews", async (req, res) => {
+        //             const newUser = req.body;
+        //             console.log("new user", newUser);
+        //             const result = await reviewCollection.insertOne(newUser);
+        //             res.send(result);
+        //         })
+
+
+        // =======
+
     }
     finally {
 
     }
 }
 run().catch(console.dir);
-
-
 
 app.get('/', (req, res) => {
     res.send('Hello From Resume')
@@ -349,3 +387,4 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Resume-Builder app listening on port ${port}`)
 })
+
