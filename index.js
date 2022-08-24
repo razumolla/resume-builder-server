@@ -20,7 +20,6 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
-
 // jwt middleware
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -54,6 +53,7 @@ async function run() {
         const clPhotoCollection = client.db("resume_builder").collection("coverLetterTemplate");
         //Cover Letter Database End
 
+        // all users &
         // user collection for jwt
         const userCollection = client.db("resume_builder").collection("users");
 
@@ -64,6 +64,8 @@ async function run() {
         //MOCK INTERVIEW DATABASE
         const interviewCollection = client.db("mock_interview").collection("interview");
         const appointmentCollection = client.db("mock_interview").collection("appointment");
+        // user review 
+        const reviewCollection = client.db("userReview").collection("review");
 
 
 
@@ -85,6 +87,38 @@ async function run() {
         })
 
 
+        app.get("/user", async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        });
+
+        app.get("/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === "admin";
+            res.send({ admin: isAdmin });
+        });
+
+        app.put("/user/admin/:email", async (req, res) => {
+            const email = req.params.email;
+            const filter = await userCollection.findOne({ email: email });
+            console.log(filter);
+            const updateDoc = {
+                $set: { role: "admin" },
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        // Delete
+        app.delete("/user/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
         //Cover Letter  Part Start
         app.post('/aboutForm', async (req, res) => {
             const NewAboutForm = req.body;
@@ -97,15 +131,21 @@ async function run() {
         app.get('/coverLetterPhoto', async (req, res) => {
             const query = {};
             const cursor = clPhotoCollection.find(query);
-            // console.log(cursor);
             const result = await cursor.toArray();
             res.send(result);
-            // console.log(result)
+        })
+
+        app.get('/allCLPhoto', async (req, res) => {
+            const query = {}
+            const cursor = coverLetterCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
         })
         //Cover Letter Part End
 
 
         //GET CV photo
+
         app.get('/cvPhoto', async (req, res) => {
             const query = {};
             const cursor = cvPhotoCollection.find(query);
@@ -180,6 +220,7 @@ async function run() {
             res.send(interviews);
         })
 
+
         // blog add section start
         app.post('/cvResumeBlog', async (req, res) => {
             const resumeBlog = req.body;
@@ -193,6 +234,7 @@ async function run() {
             res.send(resumes);
         })
 
+
         app.post('/coverLetterBlog', async (req, res) => {
             const coverLetter = req.body;
             const result = await coverLetterBlogCollection.insertOne(coverLetter);
@@ -204,6 +246,14 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         })
+        // get one data for details page
+        app.get('/coverLetterBlog/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await coverLetterBlogCollection.findOne(query);
+            res.send(result)
+        })
+
 
         app.post('/personalDevBlog', async (req, res) => {
             const personalDevBlog = req.body;
@@ -234,7 +284,6 @@ async function run() {
 
         // stripe
         app.post('/create-payment-intent', async (req, res) => {
-
             const price = req.body;
             const amount = parseInt((price.price)) * 100;
             const paymentIntent = await stripe.paymentIntents.create({
@@ -245,6 +294,26 @@ async function run() {
             res.send({ clientSecret: paymentIntent.client_secret })
         })
 
+
+        // review get 
+
+        app.get("/reviews", async (req, res) => {
+            const email = req.query.email;
+
+            const query = { email: email };
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+        // reviews add {post}
+
+        app.post("/reviews", async (req, res) => {
+            const newUser = req.body;
+            console.log("new user", newUser);
+            const result = await reviewCollection.insertOne(newUser);
+            res.send(result);
+        })
 
 
 
