@@ -1,7 +1,8 @@
 const express = require('express')
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
+require('dotenv').config();
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -56,10 +57,15 @@ async function run() {
         // user collection for jwt
         const userCollection = client.db("resume_builder").collection("users");
 
+        // CV DATABASE
+        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
+        const cvInfoCollection = client.db("cv_template").collection("cvInfo");
+
+        //MOCK INTERVIEW DATABASE
+        const interviewCollection = client.db("mock_interview").collection("interview");
+        const appointmentCollection = client.db("mock_interview").collection("appointment");
         // user review 
         const reviewCollection = client.db("userReview").collection("review");
-
-
 
 
 
@@ -124,12 +130,12 @@ async function run() {
 
         app.get('/coverLetterPhoto', async (req, res) => {
             const query = {};
-            const cursor = clPhotoCollection.find(query);        
+            const cursor = clPhotoCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
 
-        app.get('/allCLPhoto', async(req, res) =>{
+        app.get('/allCLPhoto', async (req, res) => {
             const query = {}
             const cursor = coverLetterCollection.find(query);
             const result = await cursor.toArray();
@@ -138,11 +144,9 @@ async function run() {
         //Cover Letter Part End
 
 
-        // CV DATABASE
-        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
-        const cvInfoCollection = client.db("cv_template").collection("cvInfo");
         //GET CV photo
-        app.get('/cvPhoto', verifyJWT, async (req, res) => {
+
+        app.get('/cvPhoto', async (req, res) => {
             const query = {};
             const cursor = cvPhotoCollection.find(query);
             const result = await cursor.toArray();
@@ -153,6 +157,67 @@ async function run() {
             const info = req.body;
             const result = await cvInfoCollection.insertOne(info);
             res.send(result);
+        })
+        //GET INTERVIEW
+        app.get('/interview', async (req, res) => {
+            const query = {}
+            const cursor = interviewCollection.find(query);
+            const interview = await cursor.toArray();
+            res.send(interview);
+        })
+
+        //GET appointment
+        app.get('/appointment', async (req, res) => {
+            const student = req.query.student;
+            const query = { student: student }
+            const cursor = appointmentCollection.find(query);
+            const appointments = await cursor.toArray();
+            res.send(appointments);
+        })
+
+        //POST appointment
+        app.post('/appointment', async (req, res) => {
+            const appointment = req.body;
+            const filter = {
+                interview: appointment.interview,
+                date: appointment.date,
+                student: appointment.student
+            }
+            const exist = await appointmentCollection.findOne(filter);
+            if (exist) {
+                return res.send({ success: false, appointment: exist });
+            }
+            const result = await appointmentCollection.insertOne(appointment);
+            res.send({ success: true, result });
+        })
+
+        //Delete appointment
+        app.delete('/appointment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await appointmentCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //GET available interview
+        app.get('/available', async (req, res) => {
+            const date = req.query.date || 'Aug 23, 2022';
+
+            // get all interviews
+            const interviews = await interviewCollection.find().toArray();
+
+            // get the appointment of that day
+            const query = { date: date };
+            const appointments = await appointmentCollection.find(query).toArray();
+
+            // for each service find booking for that service
+            interviews.forEach(interview => {
+                const interviewBookings = appointments.filter(appointment => appointment.interview === interview.name);
+                const bookedSlots = interviewBookings.map(interview => interview.slot);
+                const available = interview.slots.filter(slot => !bookedSlots.includes(slot));
+                interview.slots = available;
+            })
+            res.send(interviews);
         })
 
 
