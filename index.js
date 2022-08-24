@@ -1,7 +1,8 @@
 const express = require('express')
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
+require('dotenv').config();
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
@@ -75,10 +76,15 @@ async function run() {
         // user collection for jwt
         const userCollection = client.db("resume_builder").collection("users");
 
+        // CV DATABASE
+        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
+        const cvInfoCollection = client.db("cv_template").collection("cvInfo");
+
+        //MOCK INTERVIEW DATABASE
+        const interviewCollection = client.db("mock_interview").collection("interview");
+        const appointmentCollection = client.db("mock_interview").collection("appointment");
         // user review 
         const reviewCollection = client.db("userReview").collection("review");
-
-
 
 
 
@@ -99,12 +105,29 @@ async function run() {
 
         })
 
+        /*  user and admin code  */
 
+        //  user see
         app.get("/user", async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         });
 
+
+        // user
+        app.put("/user/:email", async (req, res) => {
+            const user = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const output = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(output);
+        });
+
+        //   see admin
         app.get("/admin/:email", async (req, res) => {
             const email = req.params.email;
             const user = await userCollection.findOne({ email: email });
@@ -112,6 +135,7 @@ async function run() {
             res.send({ admin: isAdmin });
         });
 
+        // make admin
         app.put("/user/admin/:email", async (req, res) => {
             const email = req.params.email;
             const filter = await userCollection.findOne({ email: email });
@@ -123,7 +147,7 @@ async function run() {
             res.send(result);
         });
 
-        // Delete
+        // Delete admin
         app.delete("/user/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -158,9 +182,6 @@ async function run() {
         //Cover Letter Part End
 
 
-        // CV DATABASE
-        const cvPhotoCollection = client.db("cv_template").collection("cv_images");
-        const cvInfoCollection = client.db("cv_template").collection("cvInfo");
         //GET CV photo
 
         app.get('/cvPhoto', async (req, res) => {
@@ -176,6 +197,67 @@ async function run() {
             const info = req.body;
             const result = await cvInfoCollection.insertOne(info);
             res.send(result);
+        })
+        //GET INTERVIEW
+        app.get('/interview', async (req, res) => {
+            const query = {}
+            const cursor = interviewCollection.find(query);
+            const interview = await cursor.toArray();
+            res.send(interview);
+        })
+
+        //GET appointment
+        app.get('/appointment', async (req, res) => {
+            const student = req.query.student;
+            const query = { student: student }
+            const cursor = appointmentCollection.find(query);
+            const appointments = await cursor.toArray();
+            res.send(appointments);
+        })
+
+        //POST appointment
+        app.post('/appointment', async (req, res) => {
+            const appointment = req.body;
+            const filter = {
+                interview: appointment.interview,
+                date: appointment.date,
+                student: appointment.student
+            }
+            const exist = await appointmentCollection.findOne(filter);
+            if (exist) {
+                return res.send({ success: false, appointment: exist });
+            }
+            const result = await appointmentCollection.insertOne(appointment);
+            res.send({ success: true, result });
+        })
+
+        //Delete appointment
+        app.delete('/appointment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await appointmentCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //GET available interview
+        app.get('/available', async (req, res) => {
+            const date = req.query.date || 'Aug 23, 2022';
+
+            // get all interviews
+            const interviews = await interviewCollection.find().toArray();
+
+            // get the appointment of that day
+            const query = { date: date };
+            const appointments = await appointmentCollection.find(query).toArray();
+
+            // for each service find booking for that service
+            interviews.forEach(interview => {
+                const interviewBookings = appointments.filter(appointment => appointment.interview === interview.name);
+                const bookedSlots = interviewBookings.map(interview => interview.slot);
+                const available = interview.slots.filter(slot => !bookedSlots.includes(slot));
+                interview.slots = available;
+            })
+            res.send(interviews);
         })
 
 
@@ -272,21 +354,24 @@ async function run() {
 
         app.post("/reviews", async (req, res) => {
             const newUser = req.body;
-            console.log("new user", newUser);
+            console.log("new review", newUser);
             const result = await reviewCollection.insertOne(newUser);
             res.send(result);
         })
 
+        // <<<<<<< HEAD
 
-        // reviews add {post}
+        //         // reviews add {post}
 
-        app.post("/reviews", async (req, res) => {
-            const newUser = req.body;
-            console.log("new user", newUser);
-            const result = await reviewCollection.insertOne(newUser);
-            res.send(result);
-        })
+        //         app.post("/reviews", async (req, res) => {
+        //             const newUser = req.body;
+        //             console.log("new user", newUser);
+        //             const result = await reviewCollection.insertOne(newUser);
+        //             res.send(result);
+        //         })
 
+
+        // =======
 
     }
     finally {
