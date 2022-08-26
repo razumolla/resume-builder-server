@@ -184,7 +184,9 @@ async function run() {
 
         //GET CV photo
 
+
         app.get('/cvPhoto', async (req, res) => {
+
 
             const query = {};
             const cursor = cvPhotoCollection.find(query);
