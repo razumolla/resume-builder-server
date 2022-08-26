@@ -100,7 +100,7 @@ async function run() {
         const cvPhotoCollection = client.db("cv_template").collection("cv_images");
         const cvInfoCollection = client.db("cv_template").collection("cvInfo");
         //GET CV photo
-        app.get('/cvPhoto',verifyJWT, async (req, res) => {
+        app.get('/cvPhoto', async (req, res) => {
             const query = {};
             const cursor = cvPhotoCollection.find(query);
             const result = await cursor.toArray();
