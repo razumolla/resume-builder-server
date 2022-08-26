@@ -5,8 +5,6 @@ require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-
-
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000
@@ -24,7 +22,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 
 // jwt middleware
-function verifyJWT(req, res, next) {
+function verifyJWT (req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         return res.status(401).send({ message: 'UnAuthorized access' });
@@ -54,11 +52,11 @@ async function run() {
         //post data
         app.post('/resume', async (req, res) => {
             const newResume = req.body;
-            // console.log('Added new user:', newResume);
+            
             const result = await resumeCollection.insertOne(newResume);
             res.send(result);
             console.log(result);
-            // res.send({ result: 'success ' });
+            
         });
 
 
@@ -360,9 +358,6 @@ async function run() {
             const result = await reviewCollection.insertOne(newUser);
             res.send(result);
         })
-
-
-
     }
     finally {
 
